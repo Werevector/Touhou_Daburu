@@ -59,6 +59,9 @@ namespace Touhou_Daburu
         int     mScore;
         PState  mPlayerState;
         Rectangle mHitbox;
+        double mTick;
+
+        public List<Bullet> mPlayerBulletsPtr;
 
         public TextureAtlas mPlayerAtlas { get; set; }
         private Dictionary<String,SpriteSequence> mSequenceMap;
@@ -80,6 +83,7 @@ namespace Touhou_Daburu
             mPlayerState = PState.idle;
 
             mHitbox = new Rectangle(0, 0, 4, 4);
+            mTick = 0.0;
         }
 
         public void LoadContent(ContentManager content, string girl)
@@ -121,7 +125,10 @@ namespace Touhou_Daburu
 
         public void Update(GameTime gameTime)
         {
-            
+
+
+            mTick += gameTime.ElapsedGameTime.TotalSeconds;
+
             mCurrentSequence = mSequenceMap["Idle"];
             KeyboardState keyboard = Keyboard.GetState();
             if (keyboard.IsKeyDown(Keys.Up))
@@ -143,9 +150,46 @@ namespace Touhou_Daburu
                 mCurrentSequence = mSequenceMap["MoveRight"];
             }
 
+            if (keyboard.IsKeyDown(Keys.Z))
+            {
+                double t = 1 / (double)20;
+                if (mTick > t)
+                {
+                    Fire();
+                    mTick = 0.0;
+                }
+            }
+
             mHitbox.X = (int)mPosition.X-mHitbox.Width/2;
             mHitbox.Y = (int)mPosition.Y-mHitbox.Height/2;
             mCurrentSequence.Update();
+        }
+
+        private void Fire()
+        {
+            Bullet bullet = new Bullet();
+            bullet.mAtlas = mPlayerAtlas;
+            bullet.mBulletType = "Shot";
+            bullet.mBulletColor = 0;
+            bullet.mPosition = new Vector2(mPosition.X - 10, mPosition.Y);
+            bullet.mVelocity = new Vector2(0,-30);
+            bullet.mAcceleration = new Vector2(0,0);
+            bullet.mHitBox = new Rectangle(0,0,10,20);
+            bullet.mDirectional = true;
+            bullet.mAllied = true;
+            mPlayerBulletsPtr.Add(bullet);
+
+            Bullet bullet2 = new Bullet();
+            bullet2.mAtlas = mPlayerAtlas;
+            bullet2.mBulletType = "Shot";
+            bullet2.mBulletColor = 0;
+            bullet2.mPosition = new Vector2(mPosition.X + 10, mPosition.Y); ;
+            bullet2.mVelocity = new Vector2(0, -30);
+            bullet2.mAcceleration = new Vector2(0, 0);
+            bullet2.mHitBox = new Rectangle(0, 0, 11, 56);
+            bullet2.mDirectional = true;
+            bullet2.mAllied = true;
+            mPlayerBulletsPtr.Add(bullet2);
         }
 
         public void Draw(SpriteBatch sb)

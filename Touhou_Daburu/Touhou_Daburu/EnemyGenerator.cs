@@ -63,7 +63,7 @@ namespace Touhou_Daburu
             if (!mFinished && mRunning)
             {
                 mCurrentInterval += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                if (mCurrentInterval > mInterval)
+                if (mCurrentInterval > mInterval && mCurrentAmount < mAmount)
                 {
                     Generate();
                     mCurrentInterval = 0;

@@ -60,6 +60,9 @@ namespace Touhou_Daburu
         {
             Bullet bullet = new Bullet();
             bullet.mTexture = mTextureMap[bulletType][bulletColor];
+            bullet.mAtlas = mBulletAtlas;
+            bullet.mBulletType = bulletType;
+            bullet.mBulletColor = bulletColor;
             bullet.mPosition = position;
             bullet.mVelocity = velocity;
             bullet.mAcceleration = acceleration;

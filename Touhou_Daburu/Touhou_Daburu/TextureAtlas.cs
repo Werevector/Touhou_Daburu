@@ -29,6 +29,13 @@ namespace Touhou_Daburu
             sb.Draw(mAtlas, destination, source, Color.White);
         }
 
+        public void Draw(SpriteBatch sb, string clipSet, int index, Vector2 position, float angle, float scale, SpriteEffects effect, float depth, float alpha)
+        {
+            Rectangle source = mClipMap[clipSet][index];
+            Vector2 origin = new Vector2(source.Width / 2, source.Height / 2);
+            sb.Draw(mAtlas, position, source, Color.White * alpha, angle, origin, scale, effect, depth);
+        }
+
         public Rectangle GetClip(string clipSet, int index)
         {
             return mClipMap[clipSet][index];

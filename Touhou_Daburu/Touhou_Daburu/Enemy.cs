@@ -78,6 +78,9 @@ namespace Touhou_Daburu
             mPosition.X += mVelocity.X;
             mPosition.Y += mVelocity.Y;
 
+            mHitBox.X = (int)mPosition.X - mHitBox.Width / 2;
+            mHitBox.Y = (int)mPosition.Y - mHitBox.Height / 2;
+
             if (mPathPoints.Count != 0 && pathIndex != mPathPoints.Count-1)
             {
                 if ((mPosition - mPathPoints[pathIndex]).Length() < 5)
@@ -128,6 +131,7 @@ namespace Touhou_Daburu
         }
 
         public Vector2 GetPosition() { return mPosition; }
+        public Rectangle GetHitbox() { return mHitBox; }
         public void SetTextureAtlas(TextureAtlas atlas) { mEnemyAtlas = atlas; debugTexture = mEnemyAtlas.GenerateDebugTexture(Color.White); }
         public void AddPattern(Pattern p) { mFirePatterns.Add(p); }
         public void SetSpriteName(string type) { mSpriteName = type; }

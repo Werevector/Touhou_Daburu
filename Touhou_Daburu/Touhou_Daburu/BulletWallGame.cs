@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Touhou_Daburu
 {
@@ -21,7 +22,12 @@ namespace Touhou_Daburu
 
         List<Bullet> mBullets;
         List<int> mBulletDestroyQueue;
+        List<int> mPlayerBulletsDestroyQueue;
         BulletSpawner mBulletSpawner;
+
+        List<int> mEnemyDestroyQueue;
+
+        List<Bullet> mPlayerBullets;
 
         PatternGenerator mPatternGenerator;
 
@@ -48,25 +54,33 @@ namespace Touhou_Daburu
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            mPlayer = new Player();
-            mPlayer.Initalize(new Vector2(700,150));
 
-            graphics.PreferredBackBufferWidth = 1920;
-            graphics.PreferredBackBufferHeight = 1080;
+            mPlayer = new Player();
+            mPlayer.Initalize(new Vector2(700, 150));
+            //graphics.PreferredBackBufferWidth = 1920;
+            //graphics.PreferredBackBufferHeight = 1080;
+            graphics.PreferredBackBufferWidth = 960;
+            graphics.PreferredBackBufferHeight = 540;
             graphics.IsFullScreen = true;
             graphics.ApplyChanges();
 
             mEnemySpawner = new EnemySpawner();
             mBulletSpawner = new BulletSpawner();
             mPatternGenerator = new PatternGenerator();
+
             mEnemies = new List<Enemy>();
             mBullets = new List<Bullet>();
+            mPlayerBullets = new List<Bullet>();
             mBulletDestroyQueue = new List<int>();
+            mPlayerBulletsDestroyQueue = new List<int>();
+            mEnemyDestroyQueue = new List<int>();
             mFrameCounter = new FrameCounter();
             mSchedule = new StageSchedule();
             base.Initialize();
 
             
+            mPlayer.mPlayerBulletsPtr = mPlayerBullets;
+
             mBulletSpawner.SetBulletList(mBullets);
             mPatternGenerator.SetBulletSpawner(mBulletSpawner);
             mEnemySpawner.SetPatternGenerator(mPatternGenerator);
@@ -113,11 +127,26 @@ namespace Touhou_Daburu
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            KeyboardState state = Keyboard.GetState();
+            if (state.IsKeyDown(Keys.R))
+            {
+                ResetStage();
+            }
+            if (state.IsKeyDown(Keys.C))
+            {
+                ClearStage();
+            }
+
+
             base.Update(gameTime);
 
             mSchedule.Update(gameTime);
             mPlayer.Update(gameTime);
             foreach (var bullet in mBullets)
+            {
+                bullet.Update(gameTime);
+            }
+            foreach (var bullet in mPlayerBullets)
             {
                 bullet.Update(gameTime);
             }
@@ -129,6 +158,21 @@ namespace Touhou_Daburu
             CheckBulletBounds();
             ProccessDestroyQueue();
             
+        }
+
+        private void ResetStage()
+        {
+            mBullets.Clear();
+            mEnemies.Clear();
+            mSchedule.Init("Content/Stages/teststagegenerators.json", mEnemySpawner);
+        }
+
+        private void ClearStage()
+        {
+            mBullets.Clear();
+            mEnemies.Clear();
+            mSchedule.Init("Content/Stages/clearstage.json", mEnemySpawner);
+
         }
 
         private void CheckBulletBounds()
@@ -157,6 +201,23 @@ namespace Touhou_Daburu
                 mBullets.RemoveAt(index);
             }
             mBulletDestroyQueue.Clear();
+
+            mPlayerBulletsDestroyQueue.Sort();
+            mPlayerBulletsDestroyQueue.Reverse();
+            foreach (var index in mPlayerBulletsDestroyQueue)
+            {
+                mPlayerBullets.RemoveAt(index);
+            }
+            mPlayerBulletsDestroyQueue.Clear();
+
+            mEnemyDestroyQueue.Sort();
+            mEnemyDestroyQueue.Reverse();
+            //List<int> unique = mEnemyDestroyQueue.Distinct().ToList();
+            foreach (var index in mEnemyDestroyQueue)
+            {
+                mEnemies.RemoveAt(index);
+            }
+            mEnemyDestroyQueue.Clear();
         }
 
         private void CheckCollisions()
@@ -167,6 +228,18 @@ namespace Touhou_Daburu
                 {
                     mBulletDestroyQueue.Add(mBullets.IndexOf(bullet));
                 }
+            }
+            foreach (var bullet in mPlayerBullets)
+            {
+                foreach(var enemy in mEnemies)
+                {
+                    if (bullet.mHitBox.Intersects(enemy.GetHitbox()))
+                    {
+                        mEnemyDestroyQueue.Add(mEnemies.IndexOf(enemy));
+                        mPlayerBulletsDestroyQueue.Add(mPlayerBullets.IndexOf(bullet));
+                    }
+                }
+                
             }
         }
 
@@ -185,17 +258,22 @@ namespace Touhou_Daburu
 
             spriteBatch.Begin();
 
-            for (int j = 0; j < 1920; j += 100)
-            {
-                Utility.DrawLine(spriteBatch, DebugBackground, new Vector2(j, 0), new Vector2(j, 1080), Color.White);
-            }
-            for (int i = 0; i < 1080; i += 100)
-            {
-                Utility.DrawLine(spriteBatch, DebugBackground, new Vector2(0, i), new Vector2(1920, i), Color.White);
-            }
+            //for (int j = 0; j < 1920; j += 100)
+            //{
+            //    Utility.DrawLine(spriteBatch, DebugBackground, new Vector2(j, 0), new Vector2(j, 1080), Color.White);
+            //}
+            //for (int i = 0; i < 1080; i += 100)
+            //{
+            //    Utility.DrawLine(spriteBatch, DebugBackground, new Vector2(0, i), new Vector2(1920, i), Color.White);
+            //}
 
             mPlayer.Draw(spriteBatch);
             foreach (var bullet in mBullets)
+            {
+                bullet.Draw(spriteBatch);
+            }
+            mPlayer.Draw(spriteBatch);
+            foreach (var bullet in mPlayerBullets)
             {
                 bullet.Draw(spriteBatch);
             }
